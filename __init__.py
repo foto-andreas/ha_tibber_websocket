@@ -4,7 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "tibber_websocket"
+DOMAIN = "ha_tibber_websocket"
 PLATFORMS: list[str] = ["sensor"]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):

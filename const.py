@@ -1,2 +1,0 @@
-HOST: str = '192.168.2.181'
-PASSWORD: str = 'XXXX-XXXX'
