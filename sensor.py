@@ -40,6 +40,8 @@ async def _async_setup_entities(hass: HomeAssistant, add_entities, host: str, pa
 
     websocket_url = f"ws://admin:{password}@{host}/ws"
 
+    _LOGGER.info(f"URL: {websocket_url}")
+
     async def listen():
         while True:
             try:
