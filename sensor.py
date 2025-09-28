@@ -1,43 +1,62 @@
 import asyncio
 import datetime
-import json
 import logging
 import websockets
 import smllib
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from smllib import SmlStreamReader
-from smllib.const import UNITS
-from smllib.errors import CrcError, SmlLibException
-from smllib.sml import SmlListEntry, ObisCode
 
 _LOGGER = logging.getLogger(__name__)
 
-from .const import HOST, PASSWORD
-
-WEBSOCKET_URL = f"ws://admin:{PASSWORD}@{HOST}/ws"
+# Legacy fallback imports removed; credentials now come from config entries
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    sensor = WebSocketSensor("Tibber WebSocket Sensor")
+    """Legacy platform setup (YAML). Uses const defaults if present."""
+    try:
+        from .const import HOST, PASSWORD  # type: ignore
+        host = HOST
+        password = PASSWORD
+    except Exception:  # If consts are missing, abort legacy setup
+        _LOGGER.error("Legacy setup requires const.HOST and const.PASSWORD or use config flow.")
+        return
+
+    await _async_setup_entities(hass, add_entities, host, password)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities) -> None:
+    """Set up sensor from a config entry."""
+    host: str = entry.data["host"]
+    password: str = entry.data["password"]
+    await _async_setup_entities(hass, async_add_entities, host, password)
+
+
+async def _async_setup_entities(hass: HomeAssistant, add_entities, host: str, password: str) -> None:
+    sensor = WebSocketSensor("Tibber WebSocket Sensor 2", host)
     add_entities([sensor])
 
-    # Hintergrund-Task starten
+    websocket_url = f"ws://admin:{password}@{host}/ws"
+
     async def listen():
         while True:
             try:
-                async with websockets.connect(WEBSOCKET_URL) as ws:
+                async with websockets.connect(websocket_url) as ws:
                     async for message in ws:
                         _LOGGER.debug("Empfangen: %s", message)
                         sensor.set_value(message)
             except Exception as exc:
                 _LOGGER.warning(f"failed: {type(exc)} - {exc}")
+                await asyncio.sleep(5)
 
     hass.loop.create_task(listen())
 
+
 class WebSocketSensor(SensorEntity):
-    def __init__(self, name):
-        self._unique_id = "tibber.websocket.sensor"
+    def __init__(self, name: str, host: str):
+        self._unique_id = f"tibber.websocket.sensor.{host}"
         self._name = name
         self._state = None
         self._extra_state_attributes = None
@@ -60,12 +79,10 @@ class WebSocketSensor(SensorEntity):
 
     @property
     def unit_of_measurement(self):
-        return ""  # Beispiel
+        return ""
 
-    def set_value(self, value):
-
-        try: 
-
+    def set_value(self, value: str):
+        try:
             current = datetime.datetime.utcnow()
 
             stream = SmlStreamReader()
@@ -75,14 +92,14 @@ class WebSocketSensor(SensorEntity):
                 raise ValueError('Bytes missing.')
 
             self._extra_state_attributes = {}
-            
-            if self._state != None:
+
+            if self._state is not None:
                 self._extra_state_attributes['gap'] = (current - self._state).total_seconds()
             self._state = current
 
             obis_values = sml_frame.get_obis()
             for obis in obis_values:
-                if obis.scaler == None:
+                if obis.scaler is None:
                     self._extra_state_attributes[obis.obis] = obis.value
                 else:
                     self._extra_state_attributes[obis.obis] = obis.value * 10 ** obis.scaler
