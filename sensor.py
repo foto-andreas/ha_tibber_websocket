@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 
 async def _async_setup_entities(hass: HomeAssistant, add_entities, host: str, password: str) -> None:
-    sensor = WebSocketSensor("Tibber WebSocket Sensor 2", host)
+    sensor = WebSocketSensor("Tibber WebSocket Sensor", host)
     add_entities([sensor])
 
     websocket_url = f"ws://admin:{password}@{host}/ws"
