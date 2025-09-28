@@ -1,0 +1,9 @@
+{
+    "domain": "tibber_websocket",
+    "name": "Tibber WebSocket Sensor",
+    "version": "1.0.0",
+    "documentation": "https://example.com",
+    "requirements": ["websockets","smllib"],
+    "dependencies": [],
+    "codeowners": ["@foto-andreas"]
+}
