@@ -12,21 +12,6 @@ from smllib import SmlStreamReader
 
 _LOGGER = logging.getLogger(__name__)
 
-# Legacy fallback imports removed; credentials now come from config entries
-
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Legacy platform setup (YAML). Uses const defaults if present."""
-    try:
-        from .const import HOST, PASSWORD  # type: ignore
-        host = HOST
-        password = PASSWORD
-    except Exception:  # If consts are missing, abort legacy setup
-        _LOGGER.error("Legacy setup requires const.HOST and const.PASSWORD or use config flow.")
-        return
-
-    await _async_setup_entities(hass, add_entities, host, password)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities) -> None:
     """Set up sensor from a config entry."""
     host: str = entry.data["host"]
