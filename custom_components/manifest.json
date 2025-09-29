@@ -1,5 +1,5 @@
 {
-    "domain": "ha_tibber_websocket",
+    "domain": "tibber_websocket",
     "name": "Tibber WebSocket Sensor",
     "version": "1.2.0",
     "documentation": "https://github.com/foto-andreas/ha_tibber_websocket/blob/main/README.md",
